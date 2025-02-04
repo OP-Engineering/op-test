@@ -7,7 +7,7 @@ A lightweight, in-app testing framework for React Native applications.
 ## Installation
 
 ```sh
-npm install @op-engineering/op-test
+npm install --save @op-engineering/op-test
 ```
 
 ## Usage
