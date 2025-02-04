@@ -77,7 +77,8 @@ Server code:
 
 ```ts
 import { BridgeServer } from 'react-native-http-bridge-refurbished';
-let results: any[] = [];
+
+let testsPassed: boolean | null = null;
 
 const server = new BridgeServer('http_service', true);
 
@@ -86,7 +87,7 @@ server.get('/ping', async (_req, _res) => {
 });
 
 server.get('/results', async (_req, _res) => {
-  return { results };
+  return { testPassed };
 });
 
 server.listen(9000);
@@ -99,27 +100,27 @@ export function stopServer() {
   server.stop();
 }
 
-export function setServerResults(r: any[]) {
-  results = r;
-}
-
-export function setServerError(e: any) {
-  results = e;
+export function setServerTestPassed(r: boolean) {
+  testsPassed = r;
 }
 ```
 
 Then to run your tests:
 
 ```tsx
-import { runTests, displayResults } from '@op-engineering/op-test';
-import { startServer, setServerResults } from './server';
+import {
+  runTests,
+  displayResults,
+  allTestsPassed,
+} from '@op-engineering/op-test';
+import { startServer, setServerTestPassed } from './server';
 
 export default function App() {
   const [result, setResult] = useState(null);
 
   useEffect(() => {
     runTests().then((newResults) => {
-      setServerResults(newResults);
+      setServerTestPassed(allTestsPassed(newResults));
       setResult(newResults);
     });
 
