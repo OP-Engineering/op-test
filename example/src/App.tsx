@@ -1,20 +1,27 @@
-import { multiply } from 'op-test';
-import { Text, View, StyleSheet } from 'react-native';
+import {
+  describe,
+  displayResults,
+  it,
+  expect,
+  runTests,
+  type DescribeBlock,
+} from '@op-engineering/op-test';
+import { useEffect, useState } from 'react';
 
-const result = multiply(3, 7);
+describe('Example', () => {
+  it('should work', () => {
+    expect(1 + 1).toBe(2);
+  });
+});
 
 export default function App() {
-  return (
-    <View style={styles.container}>
-      <Text>Result: {result}</Text>
-    </View>
-  );
-}
+  const [result, setResult] = useState<DescribeBlock | null>(null);
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+  useEffect(() => {
+    runTests().then((results) => {
+      setResult(results);
+    });
+  }, []);
+
+  return displayResults(result);
+}

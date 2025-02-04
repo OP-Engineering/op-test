@@ -2,7 +2,7 @@
   "compilerOptions": {
     "rootDir": ".",
     "paths": {
-      "op-test": ["./src/index"]
+      "@op-engineering/op-test": ["./src/index"]
     },
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,

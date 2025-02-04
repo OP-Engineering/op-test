@@ -1,5 +1,5 @@
 {
-  "name": "op-test",
+  "name": "@op-engineering/op-test",
   "version": "0.1.0",
   "description": "Simple in-app testing framework for React Native",
   "source": "./src/index.tsx",

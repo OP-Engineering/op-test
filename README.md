@@ -1,33 +1,129 @@
 # op-test
 
-Simple in-app testing framework for React Native
+A lightweight, in-app testing framework for React Native applications.
+
+![Screenshot of test results](./screenshot.png)
 
 ## Installation
 
 ```sh
-npm install op-test
+npm install @op-engineering/op-test
 ```
 
 ## Usage
 
+Import the testing utilities and write your tests:
 
-```js
-import { multiply } from 'op-test';
+```tsx
+import { describe, it, expect } from '@op-engineering/op-test';
 
-// ...
-
-const result = await multiply(3, 7);
+describe('Example', () => {
+  it('should work', () => {
+    expect(1 + 1).toBe(2);
+  });
+});
 ```
 
+### Available Functions
 
-## Contributing
+- `describe(name: string, fn: () => void)`: Group related tests
+- `it(name: string, fn: TestFunction)`: Define a test case
+- `expect(value)`: Create assertions with:
+  - `.toBe(expected)`: Strict equality
+  - `.toEqual(expected)`: Loose equality
+  - `.not.toBe(expected)`: Negative strict equality
+  - `.not.toEqual(expected)`: Negative loose equality
+  - `.resolves`: For testing promises
+  - `.rejects`: For testing promise rejections
 
-See the [contributing guide](CONTRIBUTING.md) to learn how to contribute to the repository and the development workflow.
+### Hooks
+
+- `beforeAll(fn)`: Run before all tests in a describe block
+- `beforeEach(fn)`: Run before each test
+- `afterAll(fn)`: Run after all tests in a describe block
+- `afterEach(fn)`: Run after each test
+
+### Display Results
+
+Use the `displayResults` component to show test results in your app:
+
+```tsx
+import { runTests, displayResults } from '@op-engineering/op-test';
+
+export default function App() {
+  const [result, setResult] = useState(null);
+
+  useEffect(() => {
+    runTests().then(setResult);
+  }, []);
+
+  return displayResults(result);
+}
+```
+
+### CI
+
+You probably want to automate your in-app tests in your CI. For this you can pass the DescribeBlock to the `allTestsPassed` function, it will return a boolean that indicates if all tests have passed. You can this automate this in various ways in your CI. My favorite is starting and in-app http server, exposing a single endpoint. From your CI you can then start the app, query this endpoint (over and over until it returns a reponse). Here is a snippet how to do this.
+
+Server code:
+
+```ts
+import { BridgeServer } from 'react-native-http-bridge-refurbished';
+let results: any[] = [];
+
+const server = new BridgeServer('http_service', true);
+
+server.get('/ping', async (_req, _res) => {
+  return { message: 'pong' };
+});
+
+server.get('/results', async (_req, _res) => {
+  return { results };
+});
+
+server.listen(9000);
+
+export function startServer() {
+  return server;
+}
+
+export function stopServer() {
+  server.stop();
+}
+
+export function setServerResults(r: any[]) {
+  results = r;
+}
+
+export function setServerError(e: any) {
+  results = e;
+}
+```
+
+Then to run your tests:
+
+```tsx
+import { runTests, displayResults } from '@op-engineering/op-test';
+import { startServer, setServerResults } from './server';
+
+export default function App() {
+  const [result, setResult] = useState(null);
+
+  useEffect(() => {
+    runTests().then((newResults) => {
+      setServerResults(newResults);
+      setResult(newResults);
+    });
+
+    startServer();
+  }, []);
+
+  return displayResults(result);
+}
+```
+
+The CI code is left as an exercise to the reader, just curl the device ip until you get a response.
 
 ## License
 
 MIT
-
----
-
-Made with [create-react-native-library](https://github.com/callstack/react-native-builder-bob)
