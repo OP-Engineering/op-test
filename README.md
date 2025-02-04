@@ -1,6 +1,6 @@
 # op-test
 
-A lightweight, in-app testing framework for React Native applications.
+A lightweight, in-app testing framework for React Native applications. Why would you want this? You can think of op-test as a half-way between a Detox (UI e2e test) and Jest (runs in a Node environment). It's specially useful for library authors that depend on native libraries or some sort of runtime behavior that requires a simulator/emulator/device to assert correct functionality. It's specially suited to test JSI enabled libraries as testing JSI/TurboModules/NitroModules functions require the whole the React Native app to have started.
 
 ![Screenshot of test results](./screenshot.png)
 
