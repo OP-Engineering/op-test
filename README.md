@@ -24,6 +24,14 @@ describe('Example', () => {
 });
 ```
 
+You can then call the `runTests` function which will run all the functions registered under the `describe` blocks:
+
+```ts
+import {runTests} from '@op-engineering/op-test`;
+
+const results = await runTests()
+```
+
 ### Available Functions
 
 - `describe(name: string, fn: () => void)`: Group related tests
@@ -45,7 +53,7 @@ describe('Example', () => {
 
 ### Display Results
 
-Use the `displayResults` component to show test results in your app:
+Use the `displayResults` component to show test results in your app in a visual way:
 
 ```tsx
 import { runTests, displayResults } from '@op-engineering/op-test';
