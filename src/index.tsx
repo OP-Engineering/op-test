@@ -7,6 +7,7 @@ interface Test {
   name: string;
   fn: TestFunction;
   only?: boolean;
+  passed?: boolean;
 }
 
 export interface TestResult {
@@ -102,7 +103,65 @@ export function expect(value: any) {
         throw new Error(`Expected ${value} to equal ${expected}`);
       }
     },
+    toExist() {
+      if (value === null || value === undefined) {
+        throw new Error(`Expected ${value} to exist`);
+      }
+    },
+    toBeTruthy() {
+      if (!value) {
+        throw new Error(`Expected ${value} to be truthy`);
+      }
+    },
+    toBeFalsy() {
+      if (value) {
+        throw new Error(`Expected ${value} to be falsy`);
+      }
+    },
+    toBePromise() {
+      if (typeof value !== 'object' || typeof value.then !== 'function') {
+        throw new Error(`Expected ${value} to be a Promise`);
+      }
+    },
+    toContain(expected: any) {
+      if (!Array.isArray(value) && typeof value !== 'string') {
+        throw new Error(`Expected ${value} to be an array or string`);
+      }
+      if (!value.includes(expected)) {
+        throw new Error(`Expected ${value} to contain ${expected}`);
+      }
+    },
+    toDeepEqual(expected: any) {
+      const isObject = (obj: any) =>
+        obj && typeof obj === 'object' && !Array.isArray(obj);
+      const deepEqual = (a: any, b: any): boolean => {
+        if (a === b) return true;
+        if (isObject(a) && isObject(b)) {
+          const aKeys = Object.keys(a);
+          const bKeys = Object.keys(b);
+          if (aKeys.length !== bKeys.length) return false;
+          return aKeys.every((key) => deepEqual(a[key], b[key]));
+        }
+        if (Array.isArray(a) && Array.isArray(b)) {
+          if (a.length !== b.length) return false;
+          return a.every((item, index) => deepEqual(item, b[index]));
+        }
+        return false;
+      };
+      if (!deepEqual(value, expected)) {
+        throw new Error(
+          `Expected ${JSON.stringify(value)} to deep equal ${JSON.stringify(
+            expected
+          )}`
+        );
+      }
+    },
     not: {
+      toBePromise() {
+        if (typeof value === 'object' && typeof value.then === 'function') {
+          throw new Error(`Expected ${value} not to be a Promise`);
+        }
+      },
       toBe(expected: any) {
         if (value === expected) {
           throw new Error(`Expected ${value} not to be ${expected}`);
@@ -176,7 +235,13 @@ async function runDescribeBlock(
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : String(error);
-        results.tests.push({ name, passed: false, errorMessage, fn } as Test);
+        const stack = error instanceof Error ? error.stack : '';
+        results.tests.push({
+          name,
+          passed: false,
+          errorMessage: `${errorMessage} in ${stack}`,
+          fn,
+        } as Test);
       }
 
       for (const hook of describeBlock.afterEachHooks) {
@@ -211,6 +276,10 @@ export function allTestsPassed(describeBlock: DescribeBlock): boolean {
 export function displayResults(results: DescribeBlock | null | undefined) {
   if (!results) {
     return null;
+  }
+
+  if (typeof results !== 'object') {
+    throw new Error('Results must be an object');
   }
 
   const renderResults = (describeBlock: DescribeBlock) => {
@@ -253,7 +322,7 @@ export function displayResults(results: DescribeBlock | null | undefined) {
     for (const testOrBlock of describeBlock.tests) {
       if ('fn' in testOrBlock) {
         const test = testOrBlock as Test;
-        results.push({ name: test.name, passed: true });
+        results.push({ name: test.name, passed: test.passed ?? false });
       } else {
         results.push(...allResults(testOrBlock as DescribeBlock));
       }
