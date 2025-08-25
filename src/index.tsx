@@ -232,37 +232,46 @@ async function runDescribeBlock(
     tests: [],
   };
 
-  for (const hook of describeBlock.beforeAllHooks) {
-    await hook();
-  }
-
-  for (const testOrBlock of describeBlock.tests) {
-    if ('fn' in testOrBlock) {
-      const { name, fn } = testOrBlock;
-      for (const hook of describeBlock.beforeEachHooks) {
-        await hook();
-      }
-
-      try {
-        await fn();
-        results.tests.push({ name, passed: true, fn } as Test);
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : String(error);
-        results.tests.push({ name, passed: false, errorMessage, fn } as Test);
-      }
-
-      for (const hook of describeBlock.afterEachHooks) {
-        await hook();
-      }
-    } else {
-      const nestedResults = await runDescribeBlock(testOrBlock);
-      results.tests.push(nestedResults);
+  try {
+    for (const hook of describeBlock.beforeAllHooks) {
+      await hook();
     }
-  }
 
-  for (const hook of describeBlock.afterAllHooks) {
-    await hook();
+    for (const testOrBlock of describeBlock.tests) {
+      if ('fn' in testOrBlock) {
+        const { name, fn } = testOrBlock;
+        for (const hook of describeBlock.beforeEachHooks) {
+          await hook();
+        }
+
+        try {
+          await fn();
+          results.tests.push({ name, passed: true, fn } as Test);
+        } catch (error) {
+          const errorMessage =
+            error instanceof Error ? error.message : String(error);
+          results.tests.push({ name, passed: false, errorMessage, fn } as Test);
+        }
+
+        for (const hook of describeBlock.afterEachHooks) {
+          await hook();
+        }
+      } else {
+        const nestedResults = await runDescribeBlock(testOrBlock);
+        results.tests.push(nestedResults);
+      }
+    }
+
+    for (const hook of describeBlock.afterAllHooks) {
+      await hook();
+    }
+  } catch (e) {
+    results.tests.push({
+      name: 'Error in hooks',
+      passed: false,
+      errorMessage: e instanceof Error ? e.message : String(e),
+      fn: async () => {},
+    } as Test);
   }
 
   return results;
@@ -281,6 +290,19 @@ export function allTestsPassed(describeBlock: DescribeBlock): boolean {
   });
 }
 
+const allResults = (describeBlock: DescribeBlock): TestResult[] => {
+  const results: TestResult[] = [];
+  for (const testOrBlock of describeBlock.tests) {
+    if ('fn' in testOrBlock) {
+      const test = testOrBlock as Test;
+      results.push({ name: test.name, passed: test.passed ?? false });
+    } else {
+      results.push(...allResults(testOrBlock as DescribeBlock));
+    }
+  }
+  return results;
+};
+
 export function displayResults(results: DescribeBlock | null | undefined) {
   if (!results) {
     return null;
@@ -294,7 +316,9 @@ export function displayResults(results: DescribeBlock | null | undefined) {
     return (
       <View key={describeBlock.name} style={styles.describeBlock}>
         {describeBlock.name !== 'root' && (
-          <Text style={styles.describeBlockName}>{describeBlock.name}</Text>
+          <Text style={styles.describeBlockName}>
+            {describeBlock.name}, tests: {describeBlock.tests.length}
+          </Text>
         )}
 
         {describeBlock.tests.map((testOrBlock, index) => {
@@ -323,19 +347,6 @@ export function displayResults(results: DescribeBlock | null | undefined) {
         })}
       </View>
     );
-  };
-
-  const allResults = (describeBlock: DescribeBlock): TestResult[] => {
-    const results: TestResult[] = [];
-    for (const testOrBlock of describeBlock.tests) {
-      if ('fn' in testOrBlock) {
-        const test = testOrBlock as Test;
-        results.push({ name: test.name, passed: test.passed ?? false });
-      } else {
-        results.push(...allResults(testOrBlock as DescribeBlock));
-      }
-    }
-    return results;
   };
 
   const allTestResults = allResults(results);
@@ -375,7 +386,6 @@ const styles = StyleSheet.create({
   },
   innerContainer: {
     flex: 1,
-    padding: 10,
   },
   text: {
     color: 'white',
@@ -392,7 +402,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   scrollView: {
-    maxHeight: 400,
+    flex: 1,
   },
   describeBlock: {
     marginBottom: 16,
