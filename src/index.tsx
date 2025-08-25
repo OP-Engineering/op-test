@@ -95,40 +95,48 @@ export function expect(value: any) {
   return {
     toBe(expected: any) {
       if (value !== expected) {
-        throw new Error(`Expected ${value} to be ${expected}`);
+        throw new Error(
+          `Expected ${JSON.stringify(value)} to be ${JSON.stringify(expected)}`
+        );
       }
     },
     toEqual(expected: any) {
       if (value != expected) {
-        throw new Error(`Expected ${value} to equal ${expected}`);
+        throw new Error(
+          `Expected ${JSON.stringify(value)} to equal ${JSON.stringify(expected)}`
+        );
       }
     },
     toExist() {
       if (value === null || value === undefined) {
-        throw new Error(`Expected ${value} to exist`);
+        throw new Error(`Expected ${JSON.stringify(value)} to exist`);
       }
     },
     toBeTruthy() {
       if (!value) {
-        throw new Error(`Expected ${value} to be truthy`);
+        throw new Error(`Expected ${JSON.stringify(value)} to be truthy`);
       }
     },
     toBeFalsy() {
       if (value) {
-        throw new Error(`Expected ${value} to be falsy`);
+        throw new Error(`Expected ${JSON.stringify(value)} to be falsy`);
       }
     },
     toBePromise() {
       if (typeof value !== 'object' || typeof value.then !== 'function') {
-        throw new Error(`Expected ${value} to be a Promise`);
+        throw new Error(`Expected ${JSON.stringify(value)} to be a Promise`);
       }
     },
     toContain(expected: any) {
       if (!Array.isArray(value) && typeof value !== 'string') {
-        throw new Error(`Expected ${value} to be an array or string`);
+        throw new Error(
+          `Expected ${JSON.stringify(value)} to be an array or string`
+        );
       }
       if (!value.includes(expected)) {
-        throw new Error(`Expected ${value} to contain ${expected}`);
+        throw new Error(
+          `Expected ${JSON.stringify(value)} to contain ${JSON.stringify(expected)}`
+        );
       }
     },
     toDeepEqual(expected: any) {
@@ -159,17 +167,23 @@ export function expect(value: any) {
     not: {
       toBePromise() {
         if (typeof value === 'object' && typeof value.then === 'function') {
-          throw new Error(`Expected ${value} not to be a Promise`);
+          throw new Error(
+            `Expected ${JSON.stringify(value)} not to be a Promise`
+          );
         }
       },
       toBe(expected: any) {
         if (value === expected) {
-          throw new Error(`Expected ${value} not to be ${expected}`);
+          throw new Error(
+            `Expected ${JSON.stringify(value)} not to be ${JSON.stringify(expected)}`
+          );
         }
       },
       toEqual(expected: any) {
         if (value == expected) {
-          throw new Error(`Expected ${value} not to equal ${expected}`);
+          throw new Error(
+            `Expected ${JSON.stringify(value)} not to equal ${JSON.stringify(expected)}`
+          );
         }
       },
     },
@@ -178,7 +192,7 @@ export function expect(value: any) {
         const resolvedValue = await value;
         if (resolvedValue !== expected) {
           throw new Error(
-            `Expected resolved value ${resolvedValue} to be ${expected}`
+            `Expected resolved value ${JSON.stringify(resolvedValue)} to be ${JSON.stringify(expected)}`
           );
         }
       },
@@ -186,7 +200,7 @@ export function expect(value: any) {
         const resolvedValue = await value;
         if (resolvedValue != expected) {
           throw new Error(
-            `Expected resolved value ${resolvedValue} to equal ${expected}`
+            `Expected resolved value ${JSON.stringify(resolvedValue)} to equal ${JSON.stringify(expected)}`
           );
         }
       },
@@ -196,12 +210,12 @@ export function expect(value: any) {
         try {
           await value;
           throw new Error(
-            `Expected promise to throw ${expected}, but it resolved`
+            `Expected promise to throw ${JSON.stringify(expected)}, but it resolved`
           );
         } catch (error) {
           if (error instanceof Error && error.message !== expected) {
             throw new Error(
-              `Expected promise to throw ${expected}, but it threw ${error.message}`
+              `Expected promise to throw ${JSON.stringify(expected)}, but it threw ${JSON.stringify(error.message)}`
             );
           }
         }
@@ -235,13 +249,7 @@ async function runDescribeBlock(
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : String(error);
-        const stack = error instanceof Error ? error.stack : '';
-        results.tests.push({
-          name,
-          passed: false,
-          errorMessage: `${errorMessage} in ${stack}`,
-          fn,
-        } as Test);
+        results.tests.push({ name, passed: false, errorMessage, fn } as Test);
       }
 
       for (const hook of describeBlock.afterEachHooks) {
