@@ -10969,6 +10969,7 @@ __metadata:
     react-dom: 18.3.1
     react-native: 0.76.6
     react-native-builder-bob: ^0.36.0
+    react-native-safe-area-context: ^5.6.1
     react-native-web: ~0.19.13
   languageName: unknown
   linkType: soft

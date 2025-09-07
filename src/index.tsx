@@ -278,7 +278,30 @@ async function runDescribeBlock(
   return results;
 }
 
+function findOnlyTest(
+  describeBlock: DescribeBlock
+): { block: DescribeBlock; test: Test } | null {
+  for (const testOrBlock of describeBlock.tests) {
+    if ('fn' in testOrBlock) {
+      if (testOrBlock.only) {
+        return { block: describeBlock, test: testOrBlock };
+      }
+    } else {
+      const found = findOnlyTest(testOrBlock as DescribeBlock);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
 export async function runTests(): Promise<DescribeBlock> {
+  const onlyTestInfo = findOnlyTest(rootDescribeBlock);
+
+  if (onlyTestInfo) {
+    onlyTestInfo.block.tests = [onlyTestInfo.test];
+    return runDescribeBlock(onlyTestInfo.block);
+  }
+
   return runDescribeBlock(rootDescribeBlock);
 }
 
