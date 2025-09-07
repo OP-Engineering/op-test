@@ -1,6 +1,6 @@
 {
   "name": "@op-engineering/op-test",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "Simple in-app testing framework for React Native",
   "source": "./src/index.tsx",
   "main": "./lib/commonjs/index.js",
