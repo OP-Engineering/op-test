@@ -1,5 +1,4 @@
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 type TestFunction = () => void | Promise<void>;
 type HookFunction = () => void | Promise<void>;
@@ -376,7 +375,6 @@ export function displayResults(results: DescribeBlock | null | undefined) {
   const allTestResults = allResults(results);
 
   return (
-    <SafeAreaView style={styles.container}>
       <View style={styles.innerContainer}>
         <View style={styles.summary}>
           <View
@@ -398,16 +396,10 @@ export function displayResults(results: DescribeBlock | null | undefined) {
           {renderResults(results)}
         </ScrollView>
       </View>
-    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 10,
-    backgroundColor: '#333',
-  },
   innerContainer: {
     flex: 1,
   },

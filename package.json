@@ -1,6 +1,6 @@
 {
   "name": "@op-engineering/op-test",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "description": "Simple in-app testing framework for React Native",
   "source": "./src/index.tsx",
   "main": "./lib/commonjs/index.js",
@@ -183,8 +183,5 @@
     "languages": "js",
     "type": "library",
     "version": "0.47.0"
-  },
-  "dependencies": {
-    "react-native-safe-area-context": "^5.6.1"
   }
 }
