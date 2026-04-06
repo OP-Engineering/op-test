@@ -224,9 +224,33 @@ export function expect(value: any) {
   };
 }
 
+function formatErrorDetails(error: unknown): string {
+  if (error instanceof Error) {
+    const stack = error.stack ? `\nStack:\n${error.stack}` : '';
+    return `${error.name}: ${error.message}${stack}`;
+  }
+
+  try {
+    return JSON.stringify(error);
+  } catch {
+    return String(error);
+  }
+}
+
+function formatDescribePath(path: string[]): string {
+  return path.length > 0 ? path.join(' > ') : 'root';
+}
+
 async function runDescribeBlock(
-  describeBlock: DescribeBlock
+  describeBlock: DescribeBlock,
+  parentPath: string[] = []
 ): Promise<DescribeBlock> {
+  const currentPath =
+    describeBlock.name === 'root'
+      ? parentPath
+      : [...parentPath, describeBlock.name];
+  const describePath = formatDescribePath(currentPath);
+
   const results: DescribeBlock = {
     ...describeBlock,
     tests: [],
@@ -240,8 +264,20 @@ async function runDescribeBlock(
     for (const testOrBlock of describeBlock.tests) {
       if ('fn' in testOrBlock) {
         const { name, fn } = testOrBlock;
-        for (const hook of describeBlock.beforeEachHooks) {
-          await hook();
+        for (const [index, hook] of describeBlock.beforeEachHooks.entries()) {
+          try {
+            await hook();
+          } catch (error) {
+            throw new Error(
+              [
+                'beforeEach hook failed.',
+                `Describe block: ${describePath}`,
+                `Test: ${name}`,
+                `Hook: ${index + 1}/${describeBlock.beforeEachHooks.length}`,
+                `Original error: ${formatErrorDetails(error)}`,
+              ].join('\n')
+            );
+          }
         }
 
         try {
@@ -257,7 +293,7 @@ async function runDescribeBlock(
           await hook();
         }
       } else {
-        const nestedResults = await runDescribeBlock(testOrBlock);
+        const nestedResults = await runDescribeBlock(testOrBlock, currentPath);
         results.tests.push(nestedResults);
       }
     }
@@ -269,7 +305,10 @@ async function runDescribeBlock(
     results.tests.push({
       name: 'Error in hooks',
       passed: false,
-      errorMessage: e instanceof Error ? e.message : String(e),
+      errorMessage: [
+        `Describe block: ${describePath}`,
+        `Hook error: ${formatErrorDetails(e)}`,
+      ].join('\n'),
       fn: async () => {},
     } as Test);
   }

@@ -2885,7 +2885,6 @@ __metadata:
     react: 18.3.1
     react-native: 0.76.6
     react-native-builder-bob: ^0.36.0
-    react-native-safe-area-context: ^5.6.1
     release-it: ^17.10.0
     typescript: ^5.2.2
   peerDependencies:
