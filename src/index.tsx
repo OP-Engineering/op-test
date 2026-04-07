@@ -264,6 +264,8 @@ async function runDescribeBlock(
     for (const testOrBlock of describeBlock.tests) {
       if ('fn' in testOrBlock) {
         const { name, fn } = testOrBlock;
+        const testPath =
+          describePath === 'root' ? name : `${describePath} > ${name}`;
         for (const [index, hook] of describeBlock.beforeEachHooks.entries()) {
           try {
             await hook();
@@ -281,11 +283,14 @@ async function runDescribeBlock(
         }
 
         try {
+          console.log(`🟠 START ${testPath}`);
           await fn();
+          console.log(`🟢 PASS ${testPath}`);
           results.tests.push({ name, passed: true, fn } as Test);
         } catch (error) {
           const errorMessage =
             error instanceof Error ? error.message : String(error);
+          console.log(`🔴 FAIL ${testPath}\n${errorMessage}`);
           results.tests.push({ name, passed: false, errorMessage, fn } as Test);
         }
 
